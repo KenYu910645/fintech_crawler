@@ -6,9 +6,9 @@ from dateutil.relativedelta import relativedelta
 import time
 import calendar
 
-N_MONTHS = 6 # 120
-N_SLEEP = 2 # Avoid getting ban 
-STOCK_ID = '2330'
+N_MONTHS = 120 # 120
+N_SLEEP = 4 # Avoid getting ban 
+STOCK_ID = '2603' # 2615萬海 # 長榮2603 #陽明 2609
 END_DAYTIME = datetime.date(2021, 11, 1) # Most recently 1st
 FILL_IN = True # Fill in non-trading day
 

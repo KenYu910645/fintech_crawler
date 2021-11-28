@@ -6,13 +6,31 @@ import numpy as np
 OUTPUT_FILE = "predict.csv"
 
 # load train.csv
-THESHOLD = 0.1 # 0.5
-train_df = pd.read_csv('train_clean_no_null.csv')
-test_df  = pd.read_csv('test_clean_no_null.csv')
+THESHOLD = 0.15 # 0.5
+WEIGHT = {'age' : 1, 
+          'euducation_level' : 1,
+          'job' : 1, 
+          'marital' : 1,
+          'have_credit_card' : 0,
+          'have_housing_loan' : 0,
+          'have_personal_loan' : 0,
+          'connect_method' : 1,
+          'previous_connect_month' : 1,
+          'previous_connect_weekday' : 0,
+          'campaign_connect_times' : 1,
+          'after_campaign_connect_day' : 2,
+          'before_campaign_connect_times' : 2,
+          'last_campaign_outcomes' : 3,
+          'employment_rate' : 2,
+          'consumer_price_index' : 2,
+          'consumer_confidence_index' : 2}
+
+train_df = pd.read_csv('train_clean.csv')
+test_df  = pd.read_csv('test_clean.csv')
 N_TRAIN_DATA = train_df.shape[0]
 N_TEST_DATA = test_df.shape[0]
-N_LABEL_IN_TRAIN = train_df[(train_df.label == 1)].shape[0] # 
-IGNORE_LIST = [] # ["age", "euducation_level", "marital", "have_housing_loan", "have_credit_card", "have_personal_loan", "previous_connect_weekday"]
+N_LABEL_IN_TRAIN = train_df[(train_df.label == 1)].shape[0]
+IGNORE_LIST = ["have_credit_card", "have_housing_loan", "have_personal_loan", "previous_connect_weekday"]
 print(f"Number of training data : {N_TRAIN_DATA}")
 print(f"Number of label=1 in training data : {N_LABEL_IN_TRAIN}")
 print(f"Number of testing data : {N_TEST_DATA}")
@@ -66,6 +84,7 @@ for df in [train_df, test_df]:
 # print(train_df)
 # print(test_df)
 
+
 pred_true = 0
 n_no_friend = 0
 n_null = 0
@@ -75,7 +94,7 @@ P_y = 0.1509
 
 for i in range(test_df.shape[0]):
     x = test_df.loc[i, :]
-    posterior_acc = 1
+    p_list = []
     for col_idx in range(1, test_df.shape[1] ):
         col_name = x.index[col_idx]
         
@@ -112,13 +131,21 @@ for i in range(test_df.shape[0]):
             P_y_given_x = P_y
             n_no_friend += 1
         else:
-            P_y_given_x = (P_xly)/P_x
-        posterior_acc *= P_y_given_x
+            P_y_given_x = P_y*(P_xly)/P_x
+            p_list.append((col_name, P_y_given_x))
         # print(f"P(x) = {P_x}, P(x|y) = {P_xly}, P(y|x) = {P_y_given_x}")
+    # print(p_list)
+    TOTAL_WEIGHT = 0
+    for i in WEIGHT:
+        TOTAL_WEIGHT += WEIGHT[i]
+    posterior = 0
+    for col_name, p_ylx in p_list:
+        posterior += WEIGHT[col_name] * p_ylx / TOTAL_WEIGHT
+        
 
-    # print(f"{x[0]}: posterior_acc = {posterior_acc}")
+    print(f"{x[0]}: posterior_acc = {posterior}")
 
-    if posterior_acc > THESHOLD:
+    if posterior > THESHOLD:
         pred = 1
         pred_true += 1
     else:
